@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Santa Casa Integrada — Painel de Gestão e Indicadores</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --background: #f4f8f7;
+      --card: #ffffff;
+      --border: #d9e6e3;
+      --card-border: #e6efed;
+      --foreground: #0f2926;
+      --muted-foreground: #52706c;
+      --primary: #0d7a6f;
+      --primary-foreground: #ffffff;
+      --secondary: #e8f3f1;
+      --secondary-foreground: #0d5c54;
+      --success: #16a34a;
+      --warning: #d97706;
+      --chart-1: #0d7a6f;
+      --chart-2: #14b8a6;
+      --chart-3: #f59e0b;
+      --chart-4: #0284c7;
+      --chart-5: #8b5cf6;
+      --chart-6: #ec4899;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased min-h-screen p-4 md:p-6 space-y-6">
+
+  <!-- Cabeçalho Institucional -->
+  <header class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 md:p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div class="flex items-start md:items-center gap-3.5">
+      <div class="w-11 h-11 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] flex items-center justify-center font-bold text-lg shrink-0 shadow-sm">
+        +
+      </div>
+      <div>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--secondary)] text-[var(--secondary-foreground)]">
+            Santa Casa de Pompéia • Portal Administrativo
+          </span>
+          <span id="badge-fonte" class="text-xs px-2 py-0.5 rounded border border-[var(--border)] text-[var(--muted-foreground)]">
+            Base Demonstrativa Regional (2026)
+          </span>
+        </div>
+        <h1 class="text-lg md:text-xl font-bold mt-1">
+          Santa Casa Integrada — Painel de Gestão e Análise de Demanda
+        </h1>
+        <p class="text-xs text-[var(--muted-foreground)] mt-0.5">
+          Monitoramento multidimensional de atendimentos por serviço, território, perfil demográfico, evolução temporal e módulo preditivo de IA.
+        </p>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:opacity-90 transition border border-[var(--border)]">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4" />
+        </svg>
+        <span>Importar CSV</span>
+        <input id="csv-upload" type="file" accept=".csv" class="hidden" />
+      </label>
+      <button id="btn-export-csv" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:bg-[var(--secondary)] transition">
+        Exportar Filtro (CSV)
+      </button>
+      <button id="btn-reset" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition">
+        Limpar Filtros
+      </button>
+    </div>
+  </header>
+
+  <!-- Barra de Navegação e Filtros Multidimensionais -->
+  <section class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-3">
+    <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--card-border)]">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
+          Filtros Dinâmicos de Exploração
+        </span>
+        <span id="active-filter-count" class="text-xs px-2 py-0.5 rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] font-mono">
+          0 filtros ativos
+        </span>
+      </div>
+      <div class="text-xs text-[var(--muted-foreground)]">
+        Clique nas barras dos gráficos ou utilize os seletores abaixo para cruzar dimensões.
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <!-- Período -->
+      <div class="space-y-1">
+        <label for="f-periodo" class="block text-xs font-medium text-[var(--muted-foreground)]">Período (2026)</label>
+        <select id="f-periodo" class="w-full text-xs rounded-lg px-2.5 py-2 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] focus:outline-none">
+          <option value="ALL">Todo o período (Jan–Dez)</option>
+          <option value="Q1">1º Trimestre (Jan–Mar)</option>
+          <option value="Q2">2º Trimestre (Abr–Jun)</option>
+          <option value="Q3">3º Trimestre (Jul–Set)</option>
+          <option value="Q4">4º Trimestre (Out–Dez)</option>
+          <option value="S1">1º Semestre (Jan–Jun)</option>
+          <option value="S2">2º Semestre (Jul–Dez)</option>
+          <option value="01">Janeiro/2026</option>
+          <option value="02">Fevereiro/2026</option>
+          <option value="03">Março/2026</option>
+          <option value="04">Abril/2026</option>
+          <option value="05">Maio/2026</option>
+          <option value="06">Junho/2026</option>
+          <option value="07">Julho/2026</option>
+          <option value="08">Agosto/2026</option>
+          <option value="09">Setembro/2026</option>
+          <option value="10">Outubro/2026</option>
+          <option value="11">Novembro/2026</option>
+          <option value="12">Dezembro/2026</option>
+        </select>
+      </div>
+
+      <!-- Tipo de Serviço -->
+      <div class="space-y-1">
+        <label for="f-servico" class="block text-xs font-medium text-[var(--muted-foreground)]">Tipo de Serviço</label>
+        <select id="f-servico" class="w-full text-xs rounded-lg px-2.5 py-2 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] focus:outline-none">
+          <option value="ALL">Todos os serviços</option>
+        </select>
+      </div>
+
+      <!-- Cidade -->
+      <div class="space-y-1">
+        <label for="f-cidade" class="block text-xs font-medium text-[var(--muted-foreground)]">Cidade</label>
+        <select id="f-cidade" class="w-full text-xs rounded-lg px-2.5 py-2 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] focus:outline-none">
+          <option value="ALL">Todas as cidades</option>
+        </select>
+      </div>
+
+      <!-- Bairro -->
+      <div class="space-y-1">
+        <label for="f-bairro" class="block text-xs font-medium text-[var(--muted-foreground)]">Bairro</label>
+        <select id="f-bairro" class="w-full text-xs rounded-lg px-2.5 py-2 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] focus:outline-none">
+          <option value="ALL">Todos os bairros</option>
+        </select>
+      </div>
+
+      <!-- Sexo -->
+      <div class="space-y-1">
+        <label for="f-sexo" class="block text-xs font-medium text-[var(--muted-foreground)]">Sexo</label>
+        <select id="f-sexo" class="w-full text-xs rounded-lg px-2.5 py-2 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] focus:outline-none">
+          <option value="ALL">Todos</option>
+        </select>
+      </div>
+
+      <!-- Faixa Etária -->
+      <div class="space-y-1">
+        <label for="f-faixa" class="block text-xs font-medium text-[var(--muted-foreground)]">Faixa Etária</label>
+        <select id="f-faixa" class="w-full text-xs rounded-lg px-2.5 py-2 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] focus:outline-none">
+          <option value="ALL">Todas as faixas</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Chips de filtros ativos -->
+    <div id="active-filter-chips" class="hidden flex-wrap items-center gap-1.5 pt-1"></div>
+  </section>
+
+  <!-- Cartões de Indicadores (KPIs) -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex flex-col justify-between">
+      <span class="text-xs text-[var(--muted-foreground)] font-medium">Total de Atendimentos</span>
+      <div class="mt-2 flex items-baseline justify-between">
+        <span id="kpi-total" class="text-2xl font-bold font-mono tabular-nums">0</span>
+        <span id="kpi-total-pct" class="text-xs px-2 py-0.5 rounded bg-[var(--secondary)] text-[var(--secondary-foreground)] font-mono">100% da base</span>
+      </div>
+      <span id="kpi-media-mensal" class="text-xs text-[var(--muted-foreground)] mt-1.5">Média: 0 / mês</span>
+    </div>
+
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex flex-col justify-between">
+      <span class="text-xs text-[var(--muted-foreground)] font-medium">Serviço Mais Procurado</span>
+      <div class="mt-2">
+        <div id="kpi-top-servico" class="text-sm font-bold truncate">—</div>
+        <div id="kpi-top-servico-sub" class="text-xs text-[var(--muted-foreground)] mt-1 font-mono">0 atendimentos (0%)</div>
+      </div>
+    </div>
+
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex flex-col justify-between">
+      <span class="text-xs text-[var(--muted-foreground)] font-medium">Principal Origem (Cidade / Bairro)</span>
+      <div class="mt-2">
+        <div id="kpi-top-local" class="text-sm font-bold truncate">—</div>
+        <div id="kpi-top-local-sub" class="text-xs text-[var(--muted-foreground)] mt-1 font-mono">—</div>
+      </div>
+    </div>
+
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex flex-col justify-between">
+      <span class="text-xs text-[var(--muted-foreground)] font-medium">Perfil Predominante (Sexo / Idade)</span>
+      <div class="mt-2">
+        <div id="kpi-top-perfil" class="text-sm font-bold truncate">—</div>
+        <div id="kpi-top-perfil-sub" class="text-xs text-[var(--muted-foreground)] mt-1 font-mono">—</div>
+      </div>
+    </div>
+
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex flex-col justify-between">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-[var(--muted-foreground)] font-medium">Projeção IA (Próx. Mês)</span>
+        <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--secondary)] text-[var(--primary)] font-semibold">IA Preditiva</span>
+      </div>
+      <div class="mt-2 flex items-baseline justify-between">
+        <span id="kpi-ia-proj" class="text-xl font-bold font-mono tabular-nums">0</span>
+        <span id="kpi-ia-trend" class="text-xs font-mono text-[var(--success)]">+0%</span>
+      </div>
+      <span id="kpi-ia-conf" class="text-xs text-[var(--muted-foreground)] mt-1.5">IC 95% • Supervisão humana</span>
+    </div>
+  </section>
+
+  <!-- Linha 1: Volume Temporal + Distribuição por Tipo de Serviço -->
+  <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+    <!-- Evolução Temporal -->
+    <div class="lg:col-span-7 bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex flex-col justify-between">
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[var(--card-border)]">
+        <div>
+          <h2 class="text-sm font-bold">1. Volume de Atendimentos ao Longo do Período</h2>
+          <p class="text-xs text-[var(--muted-foreground)]">
+            Série histórica mensal e linha de tendência/previsão por IA (clique em um mês para filtrar)
+          </p>
+        </div>
+        <div class="flex items-center gap-3 text-xs">
+          <label class="inline-flex items-center gap-1.5 cursor-pointer text-[var(--muted-foreground)]">
+            <input type="checkbox" id="toggle-ia-line" checked class="accent-[var(--primary)]" />
+            <span>Exibir Previsão IA</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <canvas id="canvas-temporal" class="w-full h-64 cursor-pointer"></canvas>
+      </div>
+
+      <div id="temporal-insight" class="mt-3 pt-2.5 border-t border-[var(--card-border)] text-xs text-[var(--muted-foreground)] flex flex-wrap items-center justify-between gap-2">
+        <span>Pico observado: —</span>
+        <span>Menor volume: —</span>
+      </div>
+    </div>
+
+    <!-- Distribuição por Tipo de Serviço -->
+    <div class="lg:col-span-5 bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex flex-col justify-between">
+      <div class="flex items-center justify-between gap-2 pb-3 border-b border-[var(--card-border)]">
+        <div>
+          <h2 class="text-sm font-bold">2. Distribuição por Tipo de Serviço</h2>
+          <p class="text-xs text-[var(--muted-foreground)]">
+            Comparativo de volume e participação percentual (clique para filtrar)
+          </p>
+        </div>
+        <span class="text-xs font-mono text-[var(--muted-foreground)]">Barras Horizontais</span>
+      </div>
+
+      <div id="chart-servicos" class="mt-3 space-y-2.5 flex-1 flex flex-col justify-center"></div>
+    </div>
+  </section>
+
+  <!-- Linha 2: Cidade e Bairro + Sexo + Faixa Etária -->
+  <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+    <!-- Cidade e Bairro -->
+    <div class="lg:col-span-6 bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex flex-col">
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[var(--card-border)]">
+        <div>
+          <h2 class="text-sm font-bold">3. Distribuição Territorial: Cidade e Bairro</h2>
+          <p class="text-xs text-[var(--muted-foreground)]">
+            Origem regional dos pacientes atendidos e concentração por bairro
+          </p>
+        </div>
+        <div class="inline-flex rounded-lg border border-[var(--border)] p-0.5 bg-[var(--background)] text-xs">
+          <button id="tab-loc-ambos" class="px-2.5 py-1 rounded-md font-medium bg-[var(--primary)] text-[var(--primary-foreground)]">Visão Dupla</button>
+          <button id="tab-loc-cidade" class="px-2.5 py-1 rounded-md font-medium text-[var(--muted-foreground)]">Cidades</button>
+          <button id="tab-loc-bairro" class="px-2.5 py-1 rounded-md font-medium text-[var(--muted-foreground)]">Bairros</button>
+        </div>
+      </div>
+
+      <div id="territorio-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 flex-1">
+        <!-- Coluna Cidades -->
+        <div id="box-cidades" class="space-y-2">
+          <div class="flex items-center justify-between text-xs font-semibold text-[var(--muted-foreground)] pb-1 border-b border-[var(--card-border)]">
+            <span>Por Cidade</span>
+            <span>Atend. (%)</span>
+          </div>
+          <div id="chart-cidades" class="space-y-2"></div>
+        </div>
+        <!-- Coluna Bairros -->
+        <div id="box-bairros" class="space-y-2">
+          <div class="flex items-center justify-between text-xs font-semibold text-[var(--muted-foreground)] pb-1 border-b border-[var(--card-border)]">
+            <span id="label-bairros-header">Top Bairros</span>
+            <span>Atend. (%)</span>
+          </div>
+          <div id="chart-bairros" class="space-y-2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Distribuição por Sexo -->
+    <div class="lg:col-span-3 bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex flex-col justify-between">
+      <div class="pb-3 border-b border-[var(--card-border)]">
+        <h2 class="text-sm font-bold">4. Distribuição por Sexo</h2>
+        <p class="text-xs text-[var(--muted-foreground)]">
+          Proporção categórica dos pacientes
+        </p>
+      </div>
+
+      <div class="my-3 flex flex-col items-center">
+        <canvas id="canvas-sexo" width="180" height="180" class="cursor-pointer"></canvas>
+      </div>
+
+      <div id="legend-sexo" class="space-y-1.5 text-xs pt-2 border-t border-[var(--card-border)]"></div>
+    </div>
+
+    <!-- Distribuição por Faixa Etária -->
+    <div class="lg:col-span-3 bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex flex-col justify-between">
+      <div class="pb-3 border-b border-[var(--card-border)]">
+        <h2 class="text-sm font-bold">5. Faixa Etária</h2>
+        <p class="text-xs text-[var(--muted-foreground)]">
+          Distribuição etária dos usuários
+        </p>
+      </div>
+
+      <div id="chart-faixa" class="mt-3 space-y-2.5 flex-1 flex flex-col justify-center"></div>
+
+      <div id="faixa-insight" class="mt-3 pt-2 border-t border-[var(--card-border)] text-xs text-[var(--muted-foreground)]">
+        Faixa predominante: —
+      </div>
+    </div>
+  </section>
+
+  <!-- Linha 3: Cruzamento entre Dimensões + Insights IA -->
+  <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+    <!-- Matriz de Cruzamento Multidimensional -->
+    <div class="lg:col-span-8 bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[var(--card-border)]">
+        <div>
+          <h2 class="text-sm font-bold">6. Cruzamento entre Dimensões (Padrões de Demanda)</h2>
+          <p class="text-xs text-[var(--muted-foreground)]">
+            Mapa de calor e tabela de contingência dinâmica para identificação de concentrações operacionais
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <div class="flex items-center gap-1.5">
+            <span class="text-[var(--muted-foreground)]">Linhas:</span>
+            <select id="cross-row" class="rounded-lg px-2 py-1 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)]">
+              <option value="servico" selected>Tipo de Serviço</option>
+              <option value="cidade">Cidade</option>
+              <option value="bairro">Bairro (Top 8)</option>
+              <option value="faixa">Faixa Etária</option>
+              <option value="mes">Mês do Ano</option>
+            </select>
+          </div>
+          <span class="text-[var(--muted-foreground)]">×</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[var(--muted-foreground)]">Colunas:</span>
+            <select id="cross-col" class="rounded-lg px-2 py-1 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)]">
+              <option value="faixa" selected>Faixa Etária</option>
+              <option value="sexo">Sexo</option>
+              <option value="cidade">Cidade</option>
+              <option value="servico">Tipo de Serviço</option>
+              <option value="trimestre">Trimestre</option>
+            </select>
+          </div>
+          <select id="cross-metric" class="rounded-lg px-2 py-1 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)]">
+            <option value="count">Volume (Qtd.)</option>
+            <option value="row_pct">% na Linha</option>
+            <option value="total_pct">% do Total</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table id="cross-table" class="w-full text-xs border-collapse"></table>
+      </div>
+
+      <div id="cross-summary" class="text-xs text-[var(--muted-foreground)] pt-2 border-t border-[var(--card-border)]"></div>
+    </div>
+
+    <!-- Painel de Apoio à Decisão e Alertas de IA (Seção 7 do Projeto) -->
+    <div class="lg:col-span-4 bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex flex-col justify-between space-y-3">
+      <div class="pb-3 border-b border-[var(--card-border)] flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-bold">Módulo IA — Apoio ao Planejamento</h2>
+          <p class="text-xs text-[var(--muted-foreground)]">
+            Padrões detectados e recomendações operacionais
+          </p>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded bg-[var(--secondary)] text-[var(--primary)] font-semibold">
+          Supervisão Humana
+        </span>
+      </div>
+
+      <div id="ai-insights-list" class="space-y-2.5 flex-1"></div>
+
+      <div class="p-2.5 rounded-lg bg-[var(--background)] border border-[var(--border)] text-xs text-[var(--muted-foreground)]">
+        <strong class="text-[var(--foreground)]">Governança & LGPD:</strong> Análises geradas sobre registros anonimizados e agregados. Previsões estatísticas possuem caráter consultivo e não substituem decisões clínicas ou administrativas.
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // =========================================================================
+    // 1. GERAÇÃO DA BASE DEMONSTRATIVA REALISTA (SANTA CASA DE POMPÉIA E REGIÃO)
+    // =========================================================================
+    const MESES = [
+      { id: '01', nome: 'Jan', completo: 'Janeiro', trim: 'Q1', sem: 'S1', sazon: 0.94 },
+      { id: '02', nome: 'Fev', completo: 'Fevereiro', trim: 'Q1', sem: 'S1', sazon: 0.90 },
+      { id: '03', nome: 'Mar', completo: 'Março', trim: 'Q1', sem: 'S1', sazon: 1.04 },
+      { id: '04', nome: 'Abr', completo: 'Abril', trim: 'Q2', sem: 'S1', sazon: 1.08 },
+      { id: '05', nome: 'Mai', completo: 'Maio', trim: 'Q2', sem: 'S1', sazon: 1.16 },
+      { id: '06', nome: 'Jun', completo: 'Junho', trim: 'Q2', sem: 'S1', sazon: 1.22 },
+      { id: '07', nome: 'Jul', completo: 'Julho', trim: 'Q3', sem: 'S2', sazon: 1.19 },
+      { id: '08', nome: 'Ago', completo: 'Agosto', trim: 'Q3', sem: 'S2', sazon: 1.10 },
+      { id: '09', nome: 'Set', completo: 'Setembro', trim: 'Q3', sem: 'S2', sazon: 1.03 },
+      { id: '10', nome: 'Out', completo: 'Outubro', trim: 'Q4', sem: 'S2', sazon: 1.07 },
+      { id: '11', nome: 'Nov', completo: 'Novembro', trim: 'Q4', sem: 'S2', sazon: 1.01 },
+      { id: '12', nome: 'Dez', completo: 'Dezembro', trim: 'Q4', sem: 'S2', sazon: 0.92 }
+    ];
+
+    const SERVICOS = [
+      'Consulta Clínica Geral',
+      'Exames Laboratoriais',
+      'Pronto Atendimento / Urgência',
+      'Diagnóstico por Imagem',
+      'Ortopedia e Traumatologia',
+      'Cardiologia',
+      'Ginecologia e Obstetrícia',
+      'Pediatria'
+    ];
+
+    const CIDADES_BAIRROS = {
+      'Pompéia': [
+        { nome: 'Centro', peso: 24 },
+        { nome: 'Flândria', peso: 16 },
+        { nome: 'Jardim JK', peso: 14 },
+        { nome: 'Primavera', peso: 13 },
+        { nome: 'Lacombe', peso: 11 },
+        { nome: 'Bandeirantes', peso: 10 },
+        { nome: 'Paulópolis (Distrito)', peso: 7 },
+        { nome: 'Novo Mundo (Distrito)', peso: 5 }
+      ],
+      'Quintana': [
+        { nome: 'Centro (Quintana)', peso: 55 },
+        { nome: 'Jardim Paulista (Quintana)', peso: 28 },
+        { nome: 'Portal do Sol (Quintana)', peso: 17 }
+      ],
+      'Herculândia': [
+        { nome: 'Centro (Herculândia)', peso: 62 },
+        { nome: 'Vila Nova (Herculândia)', peso: 38 }
+      ],
+      'Oriente': [
+        { nome: 'Centro (Oriente)', peso: 68 },
+        { nome: 'Jardim Morada do Sol (Oriente)', peso: 32 }
+      ],
+      'Marília': [
+        { nome: 'Zona Oeste (Marília)', peso: 54 },
+        { nome: 'Centro (Marília)', peso: 46 }
+      ],
+      'Tupã': [
+        { nome: 'Centro (Tupã)', peso: 60 },
+        { nome: 'Parque Universitário (Tupã)', peso: 40 }
+      ]
+    };
+
+    const FAIXAS_ETARIAS = [
+      '0 a 12 anos',
+      '13 a 17 anos',
+      '18 a 29 anos',
+      '30 a 44 anos',
+      '45 a 59 anos',
+      '60+ anos'
+    ];
+
+    const SEXOS = ['Feminino', 'Masculino'];
+
+    // Gerador determinístico (seed) para reprodutibilidade dos dados demonstrativos
+    function createSeededRandom(seed) {
+      let s = seed % 2147483647;
+      return function() {
+        s = (s * 16807) % 2147483647;
+        return (s - 1) / 2147483646;
+      };
+    }
+
+    function pickWeighted(rng, items) {
+      const total = items.reduce((acc, it) => acc + it.peso, 0);
+      let r = rng() * total;
+      for (const it of items) {
+        if (r < it.peso) return it.valor;
+        r -= it.peso;
+      }
+      return items[items.length - 1].valor;
+    }
+
+    function generateDefaultDataset() {
+      const rng = createSeededRandom(20260419);
+      const records = [];
+      const cidadesWeights = [
+        { valor: 'Pompéia', peso: 64 },
+        { valor: 'Quintana', peso: 13 },
+        { valor: 'Herculândia', peso: 9 },
+        { valor: 'Oriente', peso: 6 },
+        { valor: 'Marília', peso: 5 },
+        { valor: 'Tupã', peso: 3 }
+      ];
+
+      let idCounter = 1;
+      for (const m of MESES) {
+        const baseCount = Math.round(390 * m.sazon);
+        for (let i = 0; i < baseCount; i++) {
+          const cidade = pickWeighted(rng, cidadesWeights);
+          const bairrosCidade = CIDADES_BAIRROS[cidade].map(b => ({ valor: b.nome, peso: b.peso }));
+          const bairro = pickWeighted(rng, bairrosCidade);
+
+          const faixa = pickWeighted(rng, [
+            { valor: '0 a 12 anos', peso: (m.id === '05' || m.id === '06' || m.id === '07') ? 16 : 12 },
+            { valor: '13 a 17 anos', peso: 7 },
+            { valor: '18 a 29 anos', peso: 15 },
+            { valor: '30 a 44 anos', peso: 21 },
+            { valor: '45 a 59 anos', peso: 22 },
+            { valor: '60+ anos', peso: 27 }
+          ]);
+
+          let sexo = pickWeighted(rng, [
+            { valor: 'Feminino', peso: 56 },
+            { valor: 'Masculino', peso: 44 }
+          ]);
+
+          // Ajusta pesos de serviço conforme perfil etário, sexo e sazonalidade (criando padrões reais de demanda)
+          let servicoWeights;
+          if (faixa === '0 a 12 anos') {
+            servicoWeights = [
+              { valor: 'Pediatria', peso: 46 },
+              { valor: 'Pronto Atendimento / Urgência', peso: 26 },
+              { valor: 'Exames Laboratoriais', peso: 16 },
+              { valor: 'Diagnóstico por Imagem', peso: 7 },
+              { valor: 'Ortopedia e Traumatologia', peso: 5 }
+            ];
+          } else if (faixa === '60+ anos') {
+            servicoWeights = [
+              { valor: 'Consulta Clínica Geral', peso: 26 },
+              { valor: 'Cardiologia', peso: 22 },
+              { valor: 'Exames Laboratoriais', peso: 22 },
+              { valor: 'Diagnóstico por Imagem', peso: 13 },
+              { valor: 'Ortopedia e Traumatologia', peso: 10 },
+              { valor: 'Pronto Atendimento / Urgência', peso: 7 }
+            ];
+          } else {
+            servicoWeights = [
+              { valor: 'Consulta Clínica Geral', peso: 27 },
+              { valor: 'Exames Laboratoriais', peso: 23 },
+              { valor: 'Pronto Atendimento / Urgência', peso: (m.id === '05' || m.id === '06') ? 22 : 16 },
+              { valor: 'Diagnóstico por Imagem', peso: 12 },
+              { valor: 'Ortopedia e Traumatologia', peso: 9 },
+              { valor: 'Ginecologia e Obstetrícia', peso: sexo === 'Feminino' ? 14 : 0 },
+              { valor: 'Cardiologia', peso: 6 }
+            ];
+          }
+
+          const servico = pickWeighted(rng, servicoWeights);
+          if (servico === 'Ginecologia e Obstetrícia') {
+            sexo = 'Feminino';
+          }
+
+          records.push({
+            id: idCounter++,
+            mes: m.id,
+            mesNome: m.nome,
+            trimestre: m.trim,
+            semestre: m.sem,
+            servico,
+            cidade,
+            bairro,
+            sexo,
+            faixa
+          });
+        }
+      }
+      return records;
+    }
+
+    let rawData = generateDefaultDataset();
+    let territorialTab = 'ambos'; // 'ambos' | 'cidade' | 'bairro'
+
+    // Estado dos filtros
+    const filters = {
+      periodo: 'ALL',
+      servico: 'ALL',
+      cidade: 'ALL',
+      bairro: 'ALL',
+      sexo: 'ALL',
+      faixa: 'ALL'
+    };
+
+    // =========================================================================
+    // 2. UTILITÁRIOS DE TEMA E CORES
+    // =========================================================================
+    function getThemeColors() {
+      const style = getComputedStyle(document.documentElement);
+      const getVar = (name, fallback) => (style.getPropertyValue(name) || '').trim() || fallback;
+      return {
+        fg: getVar('--foreground', '#0f172a'),
+        muted: getVar('--muted-foreground', '#64748b'),
+        border: getVar('--border', '#e2e8f0'),
+        cardBorder: getVar('--card-border', '#e2e8f0'),
+        primary: getVar('--primary', '#0284c7'),
+        secondary: getVar('--secondary', '#f1f5f9'),
+        success: getVar('--success', '#16a34a'),
+        warning: getVar('--warning', '#d97706'),
+        chart: [
+          getVar('--chart-1', '#0ea5e9'),
+          getVar('--chart-2', '#10b981'),
+          getVar('--chart-3', '#f59e0b'),
+          getVar('--chart-4', '#8b5cf6'),
+          getVar('--chart-5', '#ec4899'),
+          getVar('--chart-6', '#6366f1')
+        ]
+      };
+    }
+
+    function formatNumber(n) {
+      return n.toLocaleString('pt-BR');
+    }
+
+    function formatPct(value, total) {
+      if (!total) return '0,0%';
+      return ((value / total) * 100).toFixed(1).replace('.', ',') + '%';
+    }
+
+    // =========================================================================
+    // 3. POPULAR SELETORES E APLICAR FILTROS
+    // =========================================================================
+    function populateFilterSelects() {
+      const unique = (key) => Array.from(new Set(rawData.map(r => r[key]))).filter(Boolean);
+
+      const servicos = unique('servico').sort();
+      const cidades = unique('cidade').sort((a, b) => a === 'Pompéia' ? -1 : b === 'Pompéia' ? 1 : a.localeCompare(b));
+      const sexos = unique('sexo').sort();
+      const faixasOrder = FAIXAS_ETARIAS;
+      const faixas = unique('faixa').sort((a, b) => {
+        const ia = faixasOrder.indexOf(a);
+        const ib = faixasOrder.indexOf(b);
+        if (ia !== -1 && ib !== -1) return ia - ib;
+        return a.localeCompare(b);
+      });
+
+      fillSelect('f-servico', servicos, 'Todos os serviços', filters.servico);
+      fillSelect('f-cidade', cidades, 'Todas as cidades', filters.cidade);
+      fillSelect('f-sexo', sexos, 'Todos', filters.sexo);
+      fillSelect('f-faixa', faixas, 'Todas as faixas', filters.faixa);
+      updateBairroOptions();
+    }
+
+    function updateBairroOptions() {
+      const subset = filters.cidade === 'ALL'
+        ? rawData
+        : rawData.filter(r => r.cidade === filters.cidade);
+      const bairros = Array.from(new Set(subset.map(r => r.bairro))).filter(Boolean).sort();
+      if (filters.bairro !== 'ALL' && !bairros.includes(filters.bairro)) {
+        filters.bairro = 'ALL';
+      }
+      fillSelect('f-bairro', bairros, filters.cidade === 'ALL' ? 'Todos os bairros' : `Bairros de ${filters.cidade}`, filters.bairro);
+    }
+
+    function fillSelect(id, items, allLabel, currentVal) {
+      const el = document.getElementById(id);
+      el.innerHTML = `<option value="ALL">${allLabel}</option>` +
+        items.map(it => `<option value="${it}">${it}</option>`).join('');
+      el.value = items.includes(currentVal) ? currentVal : 'ALL';
+    }
+
+    function getFilteredData() {
+      return rawData.filter(r => {
+        if (filters.periodo !== 'ALL') {
+          if (filters.periodo.startsWith('Q') && r.trimestre !== filters.periodo) return false;
+          else if (filters.periodo.startsWith('S') && r.semestre !== filters.periodo) return false;
+          else if (!filters.periodo.startsWith('Q') && !filters.periodo.startsWith('S') && r.mes !== filters.periodo) return false;
+        }
+        if (filters.servico !== 'ALL' && r.servico !== filters.servico) return false;
+        if (filters.cidade !== 'ALL' && r.cidade !== filters.cidade) return false;
+        if (filters.bairro !== 'ALL' && r.bairro !== filters.bairro) return false;
+        if (filters.sexo !== 'ALL' && r.sexo !== filters.sexo) return false;
+        if (filters.faixa !== 'ALL' && r.faixa !== filters.faixa) return false;
+        return true;
+      });
+    }
+
+    function countBy(data, key) {
+      const map = new Map();
+      for (const r of data) {
+        const k = r[key] || 'Não informado';
+        map.set(k, (map.get(k) || 0) + 1);
+      }
+      return Array.from(map.entries())
+        .map(([label, count]) => ({ label, count }))
+        .sort((a, b) => b.count - a.count);
+    }
+
+    // =========================================================================
+    // 4. ATUALIZAÇÃO DE KPIS E CHIPS DE FILTROS
+    // =========================================================================
+    function renderFilterChips() {
+      const labels = {
+        periodo: 'Período',
+        servico: 'Serviço',
+        cidade: 'Cidade',
+        bairro: 'Bairro',
+        sexo: 'Sexo',
+        faixa: 'Faixa Etária'
+      };
+      const active = Object.entries(filters).filter(([, v]) => v !== 'ALL');
+      const countEl = document.getElementById('active-filter-count');
+      countEl.textContent = `${active.length} ${active.length === 1 ? 'filtro ativo' : 'filtros ativos'}`;
+
+      const chipsEl = document.getElementById('active-filter-chips');
+      if (active.length === 0) {
+        chipsEl.classList.add('hidden');
+        chipsEl.classList.remove('flex');
+        chipsEl.innerHTML = '';
+        return;
+      }
+
+      chipsEl.classList.remove('hidden');
+      chipsEl.classList.add('flex');
+      chipsEl.innerHTML = active.map(([k, v]) => {
+        let displayVal = v;
+        if (k === 'periodo') {
+          const opt = document.querySelector(`#f-periodo option[value="${v}"]`);
+          if (opt) displayVal = opt.textContent;
+        }
+        return `
+          <button data-clear-key="${k}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-80">
+            <span><strong>${labels[k]}:</strong> ${displayVal}</span>
+            <span class="font-bold">×</span>
+          </button>
+        `;
+      }).join('');
+
+      chipsEl.querySelectorAll('[data-clear-key]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.getAttribute('data-clear-key');
+          filters[key] = 'ALL';
+          if (key === 'cidade') updateBairroOptions();
+          syncSelectValues();
+          renderAll();
+        });
+      });
+    }
+
+    function renderKPIs(data) {
+      const total = data.length;
+      const baseTotal = rawData.length;
+      document.getElementById('kpi-total').textContent = formatNumber(total);
+      document.getElementById('kpi-total-pct').textContent = `${formatPct(total, baseTotal)} da base`;
+
+      const distinctMonths = new Set(data.map(r => r.mes)).size || 1;
+      const avgMonth = Math.round(total / distinctMonths);
+      document.getElementById('kpi-media-mensal').textContent = `Média: ${formatNumber(avgMonth)} / mês (${distinctMonths} ${distinctMonths === 1 ? 'mês' : 'meses'})`;
+
+      // Top Serviço
+      const byServico = countBy(data, 'servico');
+      if (byServico.length > 0) {
+        document.getElementById('kpi-top-servico').textContent = byServico[0].label;
+        document.getElementById('kpi-top-servico-sub').textContent =
+          `${formatNumber(byServico[0].count)} atend. (${formatPct(byServico[0].count, total)})`;
+      } else {
+        document.getElementById('kpi-top-servico').textContent = 'Sem registros';
+        document.getElementById('kpi-top-servico-sub').textContent = '0 atendimentos';
+      }
+
+      // Top Local (Cidade / Bairro)
+      const byCidade = countBy(data, 'cidade');
+      const byBairro = countBy(data, 'bairro');
+      if (byCidade.length > 0 && byBairro.length > 0) {
+        document.getElementById('kpi-top-local').textContent = `${byCidade[0].label} (${formatPct(byCidade[0].count, total)})`;
+        document.getElementById('kpi-top-local-sub').textContent = `Bairro líder: ${byBairro[0].label} (${formatNumber(byBairro[0].count)})`;
+      } else {
+        document.getElementById('kpi-top-local').textContent = '—';
+        document.getElementById('kpi-top-local-sub').textContent = '—';
+      }
+
+      // Top Perfil
+      const bySexo = countBy(data, 'sexo');
+      const byFaixa = countBy(data, 'faixa');
+      if (bySexo.length > 0 && byFaixa.length > 0) {
+        document.getElementById('kpi-top-perfil').textContent = `${bySexo[0].label} (${formatPct(bySexo[0].count, total)})`;
+        document.getElementById('kpi-top-perfil-sub').textContent = `Faixa líder: ${byFaixa[0].label} (${formatPct(byFaixa[0].count, total)})`;
+      } else {
+        document.getElementById('kpi-top-perfil').textContent = '—';
+        document.getElementById('kpi-top-perfil-sub').textContent = '—';
+      }
+
+      // Projeção IA
+      const proj = Math.round(avgMonth * 1.065);
+      document.getElementById('kpi-ia-proj').textContent = `${formatNumber(proj)} / mês`;
+      document.getElementById('kpi-ia-trend').textContent = total > 0 ? '+6,5% est.' : '0%';
+      document.getElementById('kpi-ia-conf').textContent = total >= 100
+        ? 'Confiança alta (IC 95%)'
+        : 'Amostra reduzida — cautela';
+    }
+
+    // =========================================================================
+    // 5. GRÁFICO 1: VOLUME TEMPORAL + LINHA DE TENDÊNCIA / PREVISÃO IA (CANVAS)
+    // =========================================================================
+    let temporalHitBoxes = [];
+
+    function renderTemporalChart(data) {
+      const canvas = document.getElementById('canvas-temporal');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width || 600;
+      const height = rect.height || 256;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, width, height);
+
+      const colors = getThemeColors();
+      const showIA = document.getElementById('toggle-ia-line').checked;
+
+      // Contagem por mês (mantendo os 12 meses no eixo X para contexto temporal)
+      const monthCounts = MESES.map(m => {
+        const count = data.filter(r => r.mes === m.id).length;
+        return { ...m, count };
+      });
+
+      // Série prevista pela IA (suavização sazonal + fator de tendência)
+      const avgCount = monthCounts.reduce((a, b) => a + b.count, 0) / (monthCounts.filter(m => m.count > 0).length || 1);
+      const iaSeries = monthCounts.map((m, idx) => {
+        const base = m.count > 0 ? m.count : avgCount * m.sazon;
+        return Math.round(base * (1 + (idx >= 9 ? 0.07 : 0.02)));
+      });
+
+      const maxVal = Math.max(10, ...monthCounts.map(m => m.count), ...(showIA ? iaSeries : [0]));
+      const padLeft = 44;
+      const padRight = 18;
+      const padTop = 22;
+      const padBottom = 34;
+      const plotW = width - padLeft - padRight;
+      const plotH = height - padTop - padBottom;
+
+      // Linhas de grade horizontais
+      ctx.strokeStyle = colors.cardBorder;
+      ctx.lineWidth = 1;
+      ctx.fillStyle = colors.muted;
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'right';
+
+      const steps = 4;
+      for (let i = 0; i <= steps; i++) {
+        const val = Math.round((maxVal / steps) * (steps - i));
+        const y = padTop + (plotH / steps) * i;
+        ctx.beginPath();
+        ctx.moveTo(padLeft, y);
+        ctx.lineTo(width - padRight, y);
+        ctx.stroke();
+        ctx.fillText(formatNumber(val), padLeft - 8, y + 4);
+      }
+
+      // Barras mensais
+      temporalHitBoxes = [];
+      const slotW = plotW / monthCounts.length;
+      const barW = Math.min(34, slotW * 0.58);
+
+      monthCounts.forEach((m, idx) => {
+        const xCenter = padLeft + slotW * idx + slotW / 2;
+        const x = xCenter - barW / 2;
+        const barH = (m.count / maxVal) * plotH;
+        const y = padTop + plotH - barH;
+
+        const isSelected = filters.periodo === m.id;
+        ctx.fillStyle = isSelected ? colors.chart[2] : colors.chart[0];
+        ctx.globalAlpha = (filters.periodo !== 'ALL' && !isSelected && !filters.periodo.startsWith('Q') && !filters.periodo.startsWith('S')) ? 0.35 : 0.88;
+
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(x, y, barW, Math.max(2, barH), [5, 5, 0, 0]);
+        } else {
+          ctx.rect(x, y, barW, Math.max(2, barH));
+        }
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Valor no topo da barra
+        if (m.count > 0) {
+          ctx.fillStyle = colors.fg;
+          ctx.font = '11px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(m.count, xCenter, y - 5);
+        }
+
+        // Rótulo do mês
+        ctx.fillStyle = isSelected ? colors.fg : colors.muted;
+        ctx.font = isSelected ? 'bold 11px sans-serif' : '11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(m.nome, xCenter, height - 12);
+
+        temporalHitBoxes.push({
+          mesId: m.id,
+          x: xCenter - slotW / 2,
+          y: padTop,
+          w: slotW,
+          h: plotH + padBottom
+        });
+      });
+
+      // Linha de Previsão / Tendência IA
+      if (showIA && data.length > 0) {
+        ctx.save();
+        ctx.strokeStyle = colors.chart[3];
+        ctx.lineWidth = 2.2;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        iaSeries.forEach((val, idx) => {
+          const xCenter = padLeft + slotW * idx + slotW / 2;
+          const y = padTop + plotH - (val / maxVal) * plotH;
+          if (idx === 0) ctx.moveTo(xCenter, y);
+          else ctx.lineTo(xCenter, y);
+        });
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        iaSeries.forEach((val, idx) => {
+          const xCenter = padLeft + slotW * idx + slotW / 2;
+          const y = padTop + plotH - (val / maxVal) * plotH;
+          ctx.fillStyle = colors.chart[3];
+          ctx.beginPath();
+          ctx.arc(xCenter, y, 3.2, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.restore();
+      }
+
+      // Insights do rodapé temporal
+      const activeMonths = monthCounts.filter(m => m.count > 0);
+      const insightEl = document.getElementById('temporal-insight');
+      if (activeMonths.length > 0) {
+        const sorted = [...activeMonths].sort((a, b) => b.count - a.count);
+        const peak = sorted[0];
+        const low = sorted[sorted.length - 1];
+        insightEl.innerHTML = `
+          <span><strong>Pico no período:</strong> ${peak.completo} (${formatNumber(peak.count)} atend.)</span>
+          <span><strong>Menor volume:</strong> ${low.completo} (${formatNumber(low.count)} atend.)</span>
+        `;
+      } else {
+        insightEl.innerHTML = `<span>Nenhum atendimento para a combinação de filtros selecionada.</span>`;
+      }
+    }
+
+    // Clique nas barras de meses
+    document.getElementById('canvas-temporal').addEventListener('click', (e) => {
+      const rect = e.target.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const hit = temporalHitBoxes.find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
+      if (hit) {
+        filters.periodo = (filters.periodo === hit.mesId) ? 'ALL' : hit.mesId;
+        syncSelectValues();
+        renderAll();
+      }
+    });
+
+    // =========================================================================
+    // 6. GRÁFICO 2: DISTRIBUIÇÃO POR TIPO DE SERVIÇO
+    // =========================================================================
+    function renderServicosChart(data) {
+      const container = document.getElementById('chart-servicos');
+      const total = data.length;
+      const counts = countBy(data, 'servico');
+      const maxCount = counts.length > 0 ? counts[0].count : 1;
+
+      if (counts.length === 0) {
+        container.innerHTML = `<div class="text-xs text-[var(--muted-foreground)] py-8 text-center">Nenhum registro encontrado.</div>`;
+        return;
+      }
+
+      container.innerHTML = counts.map((item, idx) => {
+        const pct = formatPct(item.count, total);
+        const widthPct = Math.max(3, Math.round((item.count / maxCount) * 100));
+        const isSelected = filters.servico === item.label;
+        const chartVar = `var(--chart-${(idx % 6) + 1})`;
+        return `
+          <button data-servico="${item.label}" class="w-full text-left group focus:outline-none">
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span class="font-medium truncate pr-2 ${isSelected ? 'underline font-bold' : ''}">${item.label}</span>
+              <span class="font-mono tabular-nums text-[var(--muted-foreground)] shrink-0">
+                <strong class="text-[var(--foreground)]">${formatNumber(item.count)}</strong> (${pct})
+              </span>
+            </div>
+            <div class="w-full h-2.5 rounded-full bg-[var(--secondary)] overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-300" style="width: ${widthPct}%; background-color: ${chartVar};"></div>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      container.querySelectorAll('[data-servico]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = btn.getAttribute('data-servico');
+          filters.servico = (filters.servico === val) ? 'ALL' : val;
+          syncSelectValues();
+          renderAll();
+        });
+      });
+    }
+
+    // =========================================================================
+    // 7. GRÁFICO 3: DISTRIBUIÇÃO POR CIDADE E BAIRRO
+    // =========================================================================
+    function renderTerritorioCharts(data) {
+      const total = data.length;
+      const byCidade = countBy(data, 'cidade');
+      const byBairro = countBy(data, 'bairro').slice(0, 8);
+
+      const cidadesEl = document.getElementById('chart-cidades');
+      const bairrosEl = document.getElementById('chart-bairros');
+      const headerBairro = document.getElementById('label-bairros-header');
+
+      headerBairro.textContent = filters.cidade === 'ALL' ? 'Top 8 Bairros (Geral)' : `Bairros (${filters.cidade})`;
+
+      const maxCid = byCidade.length > 0 ? byCidade[0].count : 1;
+      cidadesEl.innerHTML = byCidade.length === 0
+        ? `<div class="text-xs text-[var(--muted-foreground)] py-4">Sem dados</div>`
+        : byCidade.map((item) => {
+            const pct = formatPct(item.count, total);
+            const w = Math.max(4, Math.round((item.count / maxCid) * 100));
+            const isSelected = filters.cidade === item.label;
+            return `
+              <button data-cidade="${item.label}" class="w-full text-left group">
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <span class="truncate ${isSelected ? 'font-bold underline' : 'font-medium'}">${item.label}</span>
+                  <span class="font-mono tabular-nums text-[var(--muted-foreground)]">
+                    <strong class="text-[var(--foreground)]">${formatNumber(item.count)}</strong> (${pct})
+                  </span>
+                </div>
+                <div class="w-full h-2 rounded-full bg-[var(--secondary)] overflow-hidden">
+                  <div class="h-full rounded-full" style="width:${w}%; background-color: var(--chart-1);"></div>
+                </div>
+              </button>
+            `;
+          }).join('');
+
+      const maxBai = byBairro.length > 0 ? byBairro[0].count : 1;
+      bairrosEl.innerHTML = byBairro.length === 0
+        ? `<div class="text-xs text-[var(--muted-foreground)] py-4">Sem dados</div>`
+        : byBairro.map((item) => {
+            const pct = formatPct(item.count, total);
+            const w = Math.max(4, Math.round((item.count / maxBai) * 100));
+            const isSelected = filters.bairro === item.label;
+            return `
+              <button data-bairro="${item.label}" class="w-full text-left group">
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <span class="truncate ${isSelected ? 'font-bold underline' : 'font-medium'}">${item.label}</span>
+                  <span class="font-mono tabular-nums text-[var(--muted-foreground)]">
+                    <strong class="text-[var(--foreground)]">${formatNumber(item.count)}</strong> (${pct})
+                  </span>
+                </div>
+                <div class="w-full h-2 rounded-full bg-[var(--secondary)] overflow-hidden">
+                  <div class="h-full rounded-full" style="width:${w}%; background-color: var(--chart-2);"></div>
+                </div>
+              </button>
+            `;
+          }).join('');
+
+      cidadesEl.querySelectorAll('[data-cidade]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = btn.getAttribute('data-cidade');
+          filters.cidade = (filters.cidade === val) ? 'ALL' : val;
+          updateBairroOptions();
+          syncSelectValues();
+          renderAll();
+        });
+      });
+
+      bairrosEl.querySelectorAll('[data-bairro]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = btn.getAttribute('data-bairro');
+          filters.bairro = (filters.bairro === val) ? 'ALL' : val;
+          syncSelectValues();
+          renderAll();
+        });
+      });
+    }
+
+    // Tabs de Cidade / Bairro
+    function setTerritorialTab(mode) {
+      territorialTab = mode;
+      const grid = document.getElementById('territorio-grid');
+      const boxCid = document.getElementById('box-cidades');
+      const boxBai = document.getElementById('box-bairros');
+      const btnAmbos = document.getElementById('tab-loc-ambos');
+      const btnCid = document.getElementById('tab-loc-cidade');
+      const btnBai = document.getElementById('tab-loc-bairro');
+
+      [btnAmbos, btnCid, btnBai].forEach(b => {
+        b.className = 'px-2.5 py-1 rounded-md font-medium text-[var(--muted-foreground)]';
+      });
+
+      if (mode === 'ambos') {
+        btnAmbos.className = 'px-2.5 py-1 rounded-md font-medium bg-[var(--primary)] text-[var(--primary-foreground)]';
+        grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 flex-1';
+        boxCid.classList.remove('hidden');
+        boxBai.classList.remove('hidden');
+      } else if (mode === 'cidade') {
+        btnCid.className = 'px-2.5 py-1 rounded-md font-medium bg-[var(--primary)] text-[var(--primary-foreground)]';
+        grid.className = 'grid grid-cols-1 gap-4 mt-3 flex-1';
+        boxCid.classList.remove('hidden');
+        boxBai.classList.add('hidden');
+      } else {
+        btnBai.className = 'px-2.5 py-1 rounded-md font-medium bg-[var(--primary)] text-[var(--primary-foreground)]';
+        grid.className = 'grid grid-cols-1 gap-4 mt-3 flex-1';
+        boxCid.classList.add('hidden');
+        boxBai.classList.remove('hidden');
+      }
+    }
+
+    document.getElementById('tab-loc-ambos').addEventListener('click', () => setTerritorialTab('ambos'));
+    document.getElementById('tab-loc-cidade').addEventListener('click', () => setTerritorialTab('cidade'));
+    document.getElementById('tab-loc-bairro').addEventListener('click', () => setTerritorialTab('bairro'));
+
+    // =========================================================================
+    // 8. GRÁFICO 4: DISTRIBUIÇÃO POR SEXO (DONUT CANVAS)
+    // =========================================================================
+    let sexoSlices = [];
+
+    function renderSexoChart(data) {
+      const canvas = document.getElementById('canvas-sexo');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const size = 180;
+      canvas.width = size * dpr;
+      canvas.height = size * dpr;
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, size, size);
+
+      const colors = getThemeColors();
+      const total = data.length;
+      const counts = countBy(data, 'sexo');
+      const cx = size / 2;
+      const cy = size / 2;
+      const outerR = 74;
+      const innerR = 48;
+
+      sexoSlices = [];
+      let startAngle = -Math.PI / 2;
+
+      if (total === 0) {
+        ctx.strokeStyle = colors.border;
+        ctx.lineWidth = 18;
+        ctx.beginPath();
+        ctx.arc(cx, cy, (outerR + innerR) / 2, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        counts.forEach((item, idx) => {
+          const sliceAngle = (item.count / total) * Math.PI * 2;
+          const endAngle = startAngle + sliceAngle;
+          const color = colors.chart[idx % colors.chart.length];
+
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(cx, cy, outerR, startAngle, endAngle);
+          ctx.arc(cx, cy, innerR, endAngle, startAngle, true);
+          ctx.closePath();
+          ctx.fill();
+
+          sexoSlices.push({ label: item.label, startAngle, endAngle });
+          startAngle = endAngle;
+        });
+      }
+
+      // Texto central
+      ctx.fillStyle = colors.fg;
+      ctx.font = 'bold 16px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(formatNumber(total), cx, cy + 2);
+      ctx.fillStyle = colors.muted;
+      ctx.font = '11px sans-serif';
+      ctx.fillText('atendimentos', cx, cy + 17);
+
+      // Legenda clicável
+      const legendEl = document.getElementById('legend-sexo');
+      legendEl.innerHTML = counts.map((item, idx) => {
+        const isSelected = filters.sexo === item.label;
+        const chartVar = `var(--chart-${(idx % 6) + 1})`;
+        return `
+          <button data-sexo="${item.label}" class="w-full flex items-center justify-between py-1 px-2 rounded hover:bg-[var(--secondary)] transition">
+            <span class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${chartVar};"></span>
+              <span class="${isSelected ? 'font-bold underline' : ''}">${item.label}</span>
+            </span>
+            <span class="font-mono tabular-nums text-[var(--muted-foreground)]">
+              <strong class="text-[var(--foreground)]">${formatNumber(item.count)}</strong> (${formatPct(item.count, total)})
+            </span>
+          </button>
+        `;
+      }).join('');
+
+      legendEl.querySelectorAll('[data-sexo]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = btn.getAttribute('data-sexo');
+          filters.sexo = (filters.sexo === val) ? 'ALL' : val;
+          syncSelectValues();
+          renderAll();
+        });
+      });
+    }
+
+    // =========================================================================
+    // 9. GRÁFICO 5: DISTRIBUIÇÃO POR FAIXA ETÁRIA
+    // =========================================================================
+    function renderFaixaChart(data) {
+      const container = document.getElementById('chart-faixa');
+      const total = data.length;
+      const map = new Map();
+      FAIXAS_ETARIAS.forEach(f => map.set(f, 0));
+      data.forEach(r => map.set(r.faixa, (map.get(r.faixa) || 0) + 1));
+
+      const items = Array.from(map.entries()).map(([label, count]) => ({ label, count }));
+      const maxCount = Math.max(1, ...items.map(i => i.count));
+
+      container.innerHTML = items.map((item) => {
+        const pct = formatPct(item.count, total);
+        const w = item.count > 0 ? Math.max(4, Math.round((item.count / maxCount) * 100)) : 0;
+        const isSelected = filters.faixa === item.label;
+        return `
+          <button data-faixa="${item.label}" class="w-full text-left group">
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span class="${isSelected ? 'font-bold underline' : 'font-medium'}">${item.label}</span>
+              <span class="font-mono tabular-nums text-[var(--muted-foreground)]">
+                <strong class="text-[var(--foreground)]">${formatNumber(item.count)}</strong> (${pct})
+              </span>
+            </div>
+            <div class="w-full h-2.5 rounded-full bg-[var(--secondary)] overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-300" style="width:${w}%; background-color: var(--chart-4);"></div>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      container.querySelectorAll('[data-faixa]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = btn.getAttribute('data-faixa');
+          filters.faixa = (filters.faixa === val) ? 'ALL' : val;
+          syncSelectValues();
+          renderAll();
+        });
+      });
+
+      const topFaixa = [...items].sort((a, b) => b.count - a.count)[0];
+      document.getElementById('faixa-insight').textContent = topFaixa && topFaixa.count > 0
+        ? `Maior concentração: ${topFaixa.label} (${formatPct(topFaixa.count, total)})`
+        : 'Sem registros para a seleção atual.';
+    }
+
+    // =========================================================================
+    // 10. GRÁFICO 6: MATRIZ DE CRUZAMENTO MULTIDIMENSIONAL (HEATMAP TABLE)
+    // =========================================================================
+    function renderCrossTab(data) {
+      let rowDim = document.getElementById('cross-row').value;
+      let colDim = document.getElementById('cross-col').value;
+      const metric = document.getElementById('cross-metric').value;
+
+      if (rowDim === colDim) {
+        colDim = (rowDim === 'faixa') ? 'sexo' : 'faixa';
+        document.getElementById('cross-col').value = colDim;
+      }
+
+      const getVal = (r, dim) => {
+        if (dim === 'mes') return r.mesNome;
+        return r[dim] || 'N/I';
+      };
+
+      // Determinar chaves de linhas e colunas
+      let rowKeys = countBy(data, rowDim === 'mes' ? 'mesNome' : rowDim).map(i => i.label);
+      if (rowDim === 'bairro') rowKeys = rowKeys.slice(0, 8);
+      if (rowDim === 'faixa') rowKeys = FAIXAS_ETARIAS.filter(f => rowKeys.includes(f));
+      if (rowDim === 'mes') rowKeys = MESES.map(m => m.nome).filter(n => rowKeys.includes(n));
+
+      let colKeys = countBy(data, colDim).map(i => i.label);
+      if (colDim === 'faixa') colKeys = FAIXAS_ETARIAS.filter(f => colKeys.includes(f));
+      if (colDim === 'trimestre') colKeys = ['Q1', 'Q2', 'Q3', 'Q4'].filter(q => colKeys.includes(q));
+
+      const tableEl = document.getElementById('cross-table');
+      const summaryEl = document.getElementById('cross-summary');
+
+      if (rowKeys.length === 0 || colKeys.length === 0) {
+        tableEl.innerHTML = `<tr><td class="p-4 text-center text-[var(--muted-foreground)]">Sem dados para cruzamento.</td></tr>`;
+        summaryEl.textContent = '';
+        return;
+      }
+
+      // Matriz de contagem
+      const matrix = {};
+      const rowTotals = {};
+      const colTotals = {};
+      let maxCell = 1;
+      let peakPair = { row: '', col: '', val: 0 };
+
+      rowKeys.forEach(rk => {
+        matrix[rk] = {};
+        rowTotals[rk] = 0;
+        colKeys.forEach(ck => { matrix[rk][ck] = 0; });
+      });
+      colKeys.forEach(ck => { colTotals[ck] = 0; });
+
+      data.forEach(r => {
+        const rk = getVal(r, rowDim);
+        const ck = getVal(r, colDim);
+        if (matrix[rk] && matrix[rk][ck] !== undefined) {
+          matrix[rk][ck]++;
+          rowTotals[rk]++;
+          colTotals[ck]++;
+          if (matrix[rk][ck] > maxCell) maxCell = matrix[rk][ck];
+          if (matrix[rk][ck] > peakPair.val) {
+            peakPair = { row: rk, col: ck, val: matrix[rk][ck] };
+          }
+        }
+      });
+
+      const grandTotal = data.length || 1;
+
+      const thead = `
+        <thead>
+          <tr class="border-b border-[var(--border)] text-left text-[var(--muted-foreground)]">
+            <th class="py-2 px-2.5 font-semibold">Dimensão</th>
+            ${colKeys.map(ck => `<th class="py-2 px-2 font-semibold text-right">${ck}</th>`).join('')}
+            <th class="py-2 px-2.5 font-semibold text-right">Total</th>
+          </tr>
+        </thead>
+      `;
+
+      const tbody = rowKeys.map(rk => {
+        const rTot = rowTotals[rk] || 0;
+        const cells = colKeys.map(ck => {
+          const val = matrix[rk][ck];
+          const intensity = val > 0 ? (0.10 + (val / maxCell) * 0.45).toFixed(2) : 0;
+          let display = formatNumber(val);
+          if (metric === 'row_pct') display = formatPct(val, rTot);
+          else if (metric === 'total_pct') display = formatPct(val, grandTotal);
+
+          const bgStyle = val > 0
+            ? `background-color: color-mix(in srgb, var(--primary) ${Math.round(intensity * 100)}%, transparent);`
+            : '';
+
+          return `<td class="py-2 px-2 text-right font-mono tabular-nums border-b border-[var(--card-border)]" style="${bgStyle}">${display}</td>`;
+        }).join('');
+
+        const totalDisplay = metric === 'total_pct'
+          ? formatPct(rTot, grandTotal)
+          : formatNumber(rTot);
+
+        return `
+          <tr class="hover:bg-[var(--secondary)] transition">
+            <td class="py-2 px-2.5 font-medium border-b border-[var(--card-border)] truncate max-w-[180px]">${rk}</td>
+            ${cells}
+            <td class="py-2 px-2.5 text-right font-bold font-mono tabular-nums border-b border-[var(--card-border)]">${totalDisplay}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const tfoot = `
+        <tfoot>
+          <tr class="font-bold bg-[var(--secondary)]">
+            <td class="py-2 px-2.5">Total Geral</td>
+            ${colKeys.map(ck => {
+              const cTot = colTotals[ck] || 0;
+              const disp = metric === 'total_pct' ? formatPct(cTot, grandTotal) : formatNumber(cTot);
+              return `<td class="py-2 px-2 text-right font-mono tabular-nums">${disp}</td>`;
+            }).join('')}
+            <td class="py-2 px-2.5 text-right font-mono tabular-nums">${metric === 'total_pct' ? '100,0%' : formatNumber(data.length)}</td>
+          </tr>
+        </tfoot>
+      `;
+
+      tableEl.innerHTML = thead + `<tbody>${tbody}</tbody>` + tfoot;
+      summaryEl.innerHTML = peakPair.val > 0
+        ? `<strong>Maior interseção identificada:</strong> ${peakPair.row} × ${peakPair.col} com <strong>${formatNumber(peakPair.val)}</strong> atendimentos (${formatPct(peakPair.val, grandTotal)} da seleção).`
+        : '';
+    }
+
+    // =========================================================================
+    // 11. MÓDULO DE INSIGHTS E RECOMENDAÇÕES DE IA (SEÇÃO 7 DO PROJETO)
+    // =========================================================================
+    function renderAIInsights(data) {
+      const container = document.getElementById('ai-insights-list');
+      const total = data.length;
+
+      if (total === 0) {
+        container.innerHTML = `
+          <div class="p-3 rounded-lg border border-[var(--border)] text-xs text-[var(--muted-foreground)]">
+            Base filtrada sem registros suficientes para gerar previsões ou alertas confiáveis.
+          </div>
+        `;
+        return;
+      }
+
+      const byServ = countBy(data, 'servico');
+      const byCid = countBy(data, 'cidade');
+      const byFaixa = countBy(data, 'faixa');
+      const byBairro = countBy(data, 'bairro');
+
+      const topServ = byServ[0];
+      const topCid = byCid[0];
+      const topFaixa = byFaixa[0];
+      const topBairro = byBairro[0];
+
+      // Sazonalidade de inverno (Mai-Jul)
+      const winterCount = data.filter(r => ['05', '06', '07'].includes(r.mes)).length;
+      const winterShare = ((winterCount / total) * 100).toFixed(1).replace('.', ',');
+
+      const insights = [
+        {
+          tag: 'Previsão de Demanda',
+          title: `Concentração em ${topServ.label}`,
+          desc: `Representa ${formatPct(topServ.count, total)} dos atendimentos filtrados (${formatNumber(topServ.count)} registros). Recomenda-se reforço de agenda e triagem nos horários de pico.`
+        },
+        {
+          tag: 'Padrão Territorial',
+          title: `Foco em ${topCid.label} — ${topBairro ? topBairro.label : ''}`,
+          desc: `${topCid.label} origina ${formatPct(topCid.count, total)} da demanda selecionada, com destaque para o bairro ${topBairro ? topBairro.label : 'Central'}. Útil para planejamento de cotas e comunicação preventiva.`
+        },
+        {
+          tag: 'Perfil Demográfico & Sazonalidade',
+          title: `Faixa ${topFaixa.label} em destaque`,
+          desc: `O grupo ${topFaixa.label} responde por ${formatPct(topFaixa.count, total)} da procura. Os meses de Mai–Jul concentram ${winterShare}% do volume anual observado.`
+        }
+      ];
+
+      container.innerHTML = insights.map(ins => `
+        <div class="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)] space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-[var(--primary)]">${ins.tag}</span>
+            <span class="text-xs text-[var(--muted-foreground)] font-mono">IA Assistiva</span>
+          </div>
+          <div class="text-xs font-bold">${ins.title}</div>
+          <p class="text-xs text-[var(--muted-foreground)] leading-relaxed">${ins.desc}</p>
+        </div>
+      `).join('');
+    }
+
+    // =========================================================================
+    // 12. IMPORTAÇÃO E EXPORTAÇÃO DE CSV
+    // =========================================================================
+    document.getElementById('csv-upload').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const text = evt.target.result;
+        const parsed = parseCSV(text);
+        if (parsed.length > 0) {
+          rawData = parsed;
+          Object.keys(filters).forEach(k => filters[k] = 'ALL');
+          document.getElementById('badge-fonte').textContent = `CSV Importado: ${file.name} (${formatNumber(parsed.length)} reg.)`;
+          populateFilterSelects();
+          renderAll();
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
+    });
+
+    function parseCSV(text) {
+      const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+      if (lines.length < 2) return [];
+      const sep = lines[0].includes(';') ? ';' : ',';
+      const headers = lines[0].split(sep).map(h => h.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+
+      const findCol = (candidates) => headers.findIndex(h => candidates.some(c => h.includes(c)));
+      const idxMes = findCol(['mes', 'data', 'periodo']);
+      const idxServ = findCol(['servico', 'tipo', 'especialidade', 'procedimento']);
+      const idxCid = findCol(['cidade', 'municipio']);
+      const idxBai = findCol(['bairro', 'distrito', 'local']);
+      const idxSexo = findCol(['sexo', 'genero']);
+      const idxFaixa = findCol(['faixa', 'idade', 'etaria']);
+
+      const result = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(sep).map(c => c.trim().replace(/^"|"$/g, ''));
+        if (cols.length < 2) continue;
+
+        let mesVal = idxMes >= 0 ? cols[idxMes] : '01';
+        let mesObj = MESES.find(m => m.id === mesVal.padStart(2, '0') || m.nome.toLowerCase() === mesVal.toLowerCase().slice(0, 3));
+        if (!mesObj && /\d{4}-\d{2}/.test(mesVal)) {
+          const mm = mesVal.split('-')[1];
+          mesObj = MESES.find(m => m.id === mm);
+        }
+        if (!mesObj && /\d{2}\/\d{2}\/\d{4}/.test(mesVal)) {
+          const mm = mesVal.split('/')[1];
+          mesObj = MESES.find(m => m.id === mm);
+        }
+        if (!mesObj) mesObj = MESES[i % 12];
+
+        result.push({
+          id: i,
+          mes: mesObj.id,
+          mesNome: mesObj.nome,
+          trimestre: mesObj.trim,
+          semestre: mesObj.sem,
+          servico: (idxServ >= 0 && cols[idxServ]) ? cols[idxServ] : 'Consulta Clínica Geral',
+          cidade: (idxCid >= 0 && cols[idxCid]) ? cols[idxCid] : 'Pompéia',
+          bairro: (idxBai >= 0 && cols[idxBai]) ? cols[idxBai] : 'Centro',
+          sexo: (idxSexo >= 0 && cols[idxSexo]) ? cols[idxSexo] : 'Não informado',
+          faixa: (idxFaixa >= 0 && cols[idxFaixa]) ? cols[idxFaixa] : '30 a 44 anos'
+        });
+      }
+      return result;
+    }
+
+    document.getElementById('btn-export-csv').addEventListener('click', () => {
+      const data = getFilteredData();
+      const header = 'id;mes;trimestre;tipo_servico;cidade;bairro;sexo;faixa_etaria\n';
+      const rows = data.map(r => `${r.id};${r.mesNome}/2026;${r.trimestre};${r.servico};${r.cidade};${r.bairro};${r.sexo};${r.faixa}`).join('\n');
+      const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'santa_casa_atendimentos_filtrados.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // =========================================================================
+    // 13. EVENTOS DE NAVEGAÇÃO E SINCRONIZAÇÃO GERAL
+    // =========================================================================
+    function syncSelectValues() {
+      document.getElementById('f-periodo').value = filters.periodo;
+      document.getElementById('f-servico').value = filters.servico;
+      document.getElementById('f-cidade').value = filters.cidade;
+      document.getElementById('f-bairro').value = filters.bairro;
+      document.getElementById('f-sexo').value = filters.sexo;
+      document.getElementById('f-faixa').value = filters.faixa;
+    }
+
+    ['periodo', 'servico', 'cidade', 'bairro', 'sexo', 'faixa'].forEach(key => {
+      document.getElementById(`f-${key}`).addEventListener('change', (e) => {
+        filters[key] = e.target.value;
+        if (key === 'cidade') updateBairroOptions();
+        renderAll();
+      });
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      Object.keys(filters).forEach(k => filters[k] = 'ALL');
+      updateBairroOptions();
+      syncSelectValues();
+      renderAll();
+    });
+
+    document.getElementById('toggle-ia-line').addEventListener('change', () => {
+      renderTemporalChart(getFilteredData());
+    });
+
+    ['cross-row', 'cross-col', 'cross-metric'].forEach(id => {
+      document.getElementById(id).addEventListener('change', () => {
+        renderCrossTab(getFilteredData());
+      });
+    });
+
+    function renderAll() {
+      const filtered = getFilteredData();
+      renderFilterChips();
+      renderKPIs(filtered);
+      renderTemporalChart(filtered);
+      renderServicosChart(filtered);
+      renderTerritorioCharts(filtered);
+      renderSexoChart(filtered);
+      renderFaixaChart(filtered);
+      renderCrossTab(filtered);
+      renderAIInsights(filtered);
+    }
+
+    // Inicialização e redesenho em mudança de tema ou redimensionamento
+    populateFilterSelects();
+    renderAll();
+    window.addEventListener('resize', () => renderAll());
+    window.addEventListener('themechange', () => renderAll());
+  </script>
+</body>
+</html>
